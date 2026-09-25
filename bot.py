@@ -272,8 +272,17 @@ async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # ASOSIY FUNKSIYA
 # ────────────────────────────────────────────────────────────────────────────
 
+import asyncio
+
 def main() -> None:
     """Botni ishga tushiradi."""
+    # Python 3.12+ / 3.14 da 'no current event loop' xatosini oldini olish
+    try:
+        asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
     logger.info("🚀 Bot ishga tushmoqda...")
 
     # Application yaratish

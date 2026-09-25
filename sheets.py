@@ -2,6 +2,8 @@
 Google Sheets integratsiya moduli.
 Service Account orqali Sheets ga ma'lumot yozadi.
 """
+import json
+import os
 import gspread
 from google.oauth2.service_account import Credentials
 from datetime import datetime
@@ -24,7 +26,18 @@ CREDENTIALS_FILE = "credentials.json"
 def get_worksheet():
     """Google Sheets varag'iga ulanadi va qaytaradi."""
     try:
-        creds = Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=SCOPES)
+        # Avval muhit o'zgaruvchisi (CREDENTIALS_JSON) tekshiriladi (Render, Heroku, Railway uchun juda qulay)
+        env_creds = os.getenv("CREDENTIALS_JSON") or os.getenv("GOOGLE_CREDENTIALS_JSON")
+        if env_creds:
+            info = json.loads(env_creds)
+            creds = Credentials.from_service_account_info(info, scopes=SCOPES)
+        elif os.path.exists(CREDENTIALS_FILE):
+            creds = Credentials.from_service_account_file(CREDENTIALS_FILE, scopes=SCOPES)
+        else:
+            raise FileNotFoundError(
+                f"❌ '{CREDENTIALS_FILE}' fayli yoki 'CREDENTIALS_JSON' muhit o'zgaruvchisi topilmadi!"
+            )
+
         client = gspread.authorize(creds)
         spreadsheet = client.open_by_key(SHEET_ID)
 
@@ -37,8 +50,8 @@ def get_worksheet():
             logger.info(f"Yangi varaq yaratildi: {SHEET_NAME}")
 
         return worksheet
-    except FileNotFoundError:
-        logger.error(f"❌ credentials.json fayli topilmadi!")
+    except FileNotFoundError as e:
+        logger.error(str(e))
         raise
     except Exception as e:
         logger.error(f"❌ Google Sheets ulanishida xato: {e}")
