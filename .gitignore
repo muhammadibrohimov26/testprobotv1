@@ -1,0 +1,29 @@
+# Maxfiy fayllar - GitHubga yuklanmasin!
+.env
+credentials.json
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual muhit
+venv/
+env/
+.venv/
+.env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
