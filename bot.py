@@ -269,6 +269,41 @@ async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 # ────────────────────────────────────────────────────────────────────────────
+# RENDER UCHUN HEALTH CHECK SERVER
+# ────────────────────────────────────────────────────────────────────────────
+
+import os
+import threading
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    """Render Web Service port tekshiruvi uchun oddiy javob qaytaruvchi handler."""
+
+    def do_GET(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/plain; charset=utf-8")
+        self.end_headers()
+        self.wfile.write(b"OK - Bot is running!")
+
+    def log_message(self, format, *args):
+        # Render ping xabarlari konsolni to'ldirib yubormasligi uchun
+        pass
+
+
+def start_health_check_server():
+    """Render Web Service port scan xatosini oldini olish uchun server."""
+    port = int(os.environ.get("PORT", 8080))
+    try:
+        server = HTTPServer(("0.0.0.0", port), HealthCheckHandler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        logger.info(f"🌐 Health-check server {port}-portda muvaffaqiyatli ishga tushdi.")
+    except Exception as e:
+        logger.warning(f"Health-check server ogohlantirish: {e}")
+
+
+# ────────────────────────────────────────────────────────────────────────────
 # ASOSIY FUNKSIYA
 # ────────────────────────────────────────────────────────────────────────────
 
@@ -276,6 +311,9 @@ import asyncio
 
 def main() -> None:
     """Botni ishga tushiradi."""
+    # Render Web Service uchun portni ochish
+    start_health_check_server()
+
     # Python 3.12+ / 3.14 da 'no current event loop' xatosini oldini olish
     try:
         asyncio.get_event_loop()
