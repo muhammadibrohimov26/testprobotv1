@@ -200,8 +200,16 @@ async def received_age(update: Update, context: ContextTypes.DEFAULT_TYPE) -> in
         return ASKING_AGE
 
     # Ma'lumotlarni yig'ish
-    name = context.user_data["name"]
-    phone = context.user_data["phone"]
+    name = context.user_data.get("name")
+    phone = context.user_data.get("phone")
+    if not name or not phone:
+        await update.message.reply_text(
+            "⚠️ Sessiya muddati tugagan yoki ma'lumotlar topilmadi.\n\n"
+            "Iltimos, qaytadan boshlang: /start",
+            reply_markup=ReplyKeyboardRemove(),
+        )
+        return ConversationHandler.END
+
     age = age_text
     telegram_id = update.effective_user.id
 
@@ -266,6 +274,18 @@ async def unknown_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "🤔 Bu buyruqni bilmayman.\n\n"
         "Boshlash uchun /start bosing."
     )
+
+
+async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Botda yuz bergan xatoliklarni ushlab qolib, logga yozadi."""
+    logger.error("❌ Botda kutilmagan xatolik yuz berdi:", exc_info=context.error)
+    if isinstance(update, Update) and update.effective_message:
+        try:
+            await update.effective_message.reply_text(
+                "⚠️ Kutilmagan xatolik yuz berdi. Iltimos, /start buyrug'i orqali qayta urinib ko'ring."
+            )
+        except Exception:
+            pass
 
 
 # ────────────────────────────────────────────────────────────────────────────
@@ -357,6 +377,7 @@ def main() -> None:
     # Handlerlarni qo'shish
     app.add_handler(conv_handler)
     app.add_handler(MessageHandler(filters.COMMAND, unknown_command))
+    app.add_error_handler(error_handler)
 
     # Botni ishga tushirish (polling rejimi)
     logger.info("✅ Bot muvaffaqiyatli ishga tushdi! Ctrl+C bilan to'xtatish mumkin.")
